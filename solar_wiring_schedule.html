@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Wiring Schedule Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px; /* Increased width for more columns */
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:read-only {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+            font-weight: bold;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-update {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger:hover, .btn-edit:hover {
+            transform: scale(1.05);
+        }
+
+        .table-container {
+            padding: 20px 30px 30px;
+            overflow-x: auto;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .schedule-table th {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .schedule-table th[title] { cursor: help; }
+
+        .schedule-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.8rem;
+        }
+
+        .schedule-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.005);
+            transition: all 0.2s ease-out;
+        }
+
+        .calculated-field {
+            background: rgba(52, 152, 219, 0.1) !important;
+            font-weight: 600;
+        }
+        
+        .intermediate-calc {
+            background: rgba(236, 240, 241, 0.8) !important;
+        }
+
+        .warning {
+            background: rgba(255, 193, 7, 0.3) !important;
+            color: #856404;
+        }
+
+        .error {
+            background: rgba(220, 53, 69, 0.3) !important;
+            color: #721c24;
+        }
+
+        .actions-cell {
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .definitions-container {
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1800px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .definitions-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .definitions-container dl {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px 30px;
+        }
+        .definitions-container dt {
+            font-weight: bold;
+            color: #764ba2;
+        }
+        .definitions-container dd {
+            margin-left: 0;
+            color: #555;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Solar Wiring Schedule Generator</h1>
+            <p>Professional electrical design tool for solar installations</p>
+        </div>
+
+        <div class="controls">
+            <form id="scheduleForm">
+                <div class="form-grid">
+                    <div class="form-group"><label for="legId">Leg ID:</label><input type="text" id="legId" placeholder="e.g., L-001"></div>
+                    <div class="form-group"><label for="typical">Typical (# of Wires):</label><input type="number" id="typical" value="1" min="1"></div>
+                    <div class="form-group"><label for="initialLocation">Initial Location:</label><input type="text" id="initialLocation" placeholder="e.g., PV Array"></div>
+                    <div class="form-group"><label for="finalLocation">Final Location:</label><input type="text" id="finalLocation" placeholder="e.g., Junction Box"></div>
+                    <div class="form-group"><label for="conductorAwg">Conductor Gauge:</label><select id="conductorAwg"><option value="14">14 AWG</option><option value="12">12 AWG</option><option value="10" selected>10 AWG</option><option value="8">8 AWG</option><option value="6">6 AWG</option><option value="4">4 AWG</option><option value="2">2 AWG</option><option value="1">1 AWG</option><option value="1/0">1/0 AWG</option><option value="2/0">2/0 AWG</option><option value="3/0">3/0 AWG</option><option value="4/0">4/0 AWG</option></select></div>
+                    <div class="form-group"><label for="conductorType">Conductor Type:</label><select id="conductorType"><option value="THWN-2" selected>THWN-2</option><option value="XHHW-2">XHHW-2</option><option value="Enphase Q Cable">Enphase Q Cable</option></select></div>
+                    <div class="form-group"><label for="conductorMaterial">Conductor Material:</label><select id="conductorMaterial"><option value="Copper" selected>Copper</option><option value="Aluminum">Aluminum</option></select></div>
+                    
+                    <div class="form-group"><label for="conduitDiameter">Conduit:</label><select id="conduitDiameter"><option value="1/2">1/2"</option><option value="3/4" selected>3/4"</option><option value="1">1"</option><option value="1-1/4">1-1/4"</option><option value="1-1/2">1-1/2"</option><option value="2">2"</option><option value="NA">N/A</option></select></div>
+                    <div class="form-group"><label for="parallelCircuits"># of Parallel Circuits:</label><input type="number" id="parallelCircuits" value="1" min="1"></div>
+                    <div class="form-group"><label for="currentCarryingConductors">CCC in Conduit:</label><input type="number" id="currentCarryingConductors" value="3" min="1"></div>
+                    <div class="form-group"><label for="ocpd">OCPD (A): <button type="button" id="suggestOcpdBtn" class="btn btn-primary btn-small">Suggest</button></label><input type="number" id="ocpd" value="20" min="1"></div>
+                    <div class="form-group"><label for="egcAwg">EGC Gauge (Calculated):</label><select id="egcAwg" disabled><option value="14">14 AWG</option><option value="12" selected>12 AWG</option><option value="10">10 AWG</option><option value="8">8 AWG</option><option value="6">6 AWG</option><option value="4">4 AWG</option></select></div>
+                    <div class="form-group"><label for="egcMaterial">EGC Material:</label><select id="egcMaterial"><option value="Bare" selected>Bare Copper</option><option value="THWN-2">Insulated Copper</option></select></div>
+                    <div class="form-group"><label for="termTempRating">Terminal Temp Rating (°C):</label><select id="termTempRating"><option value="60">60°C</option><option value="75" selected>75°C</option><option value="90">90°C</option></select></div>
+                    
+                    <div class="form-group"><label for="ambientTemp">Ambient Temp (°C):</label><input type="number" id="ambientTemp" value="32"></div>
+                    <div class="form-group checkbox-group"><label for="rooftopInstallation">Rooftop?</label><input type="checkbox" id="rooftopInstallation" style="width: 20px; height: 20px;"></div>
+                    <div class="form-group" id="rooftopDistanceGroup" style="display: none;"><label for="rooftopDistance">Dist. Above Roof:</label><select id="rooftopDistance"><option value="0-1/2">0 - 1/2 in</option><option value="1/2-3.5" selected>> 1/2 to 3.5 in</option><option value="3.5-12">> 3.5 to 12 in</option></select></div>
+                    <div class="form-group"><label for="microInverter">Microinverter:</label><select id="microInverter"><option value="">(Manual Current)</option><option value="Enphase IQ8+">Enphase IQ8+</option><option value="Enphase IQ8M">Enphase IQ8M</option><option value="Enphase IQ8A">Enphase IQ8A</option><option value="Enphase IQ8H">Enphase IQ8H</option><option value="Enphase IQ8HC">Enphase IQ8HC</option></select></div>
+                    <div class="form-group"><label for="panelCount">Number of Panels/Micros:</label><input type="number" id="panelCount" value="1" min="1"></div>
+                    <div class="form-group"><label for="contCurrent">Cont. Current (A) (Calc):</label><input type="number" id="contCurrent" step="0.01"></div>
+                    <div class="form-group"><label for="length">Length (ft):</label><input type="number" id="length" value="100" min="1"></div>
+                    <div class="form-group"><label for="voltage">Voltage (V):</label><select id="voltage"><option value="120">120V</option><option value="240" selected>240V</option></select></div>
+
+                </div>
+            </form>
+            <div>
+                <button id="addUpdateButton" class="btn btn-primary">Add Wiring Leg</button>
+                <button id="clearAllButton" class="btn btn-secondary">Clear All</button>
+                <button id="exportCsvButton" class="btn btn-secondary">Export to CSV</button>
+                <button id="importCsvButton" class="btn btn-secondary">Import from CSV</button> <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="emptyState" class="empty-state">
+                <h3>🔌 No Wiring Legs Added Yet</h3>
+            </div>
+            <table id="scheduleTable" class="schedule-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" title="A unique identifier for the wiring leg.">ID</th>
+                        <th rowspan="2" title="The number of identical wires in this run.">Typical</th>
+                        <th colspan="2" title="The start and end points of the wire run.">Location</th>
+                        <th colspan="3" title="Properties of the main current-carrying wires.">Conductor</th>
+                        <th rowspan="2" title="The nominal trade size of the conduit.">Conduit</th>
+                        <th colspan="3" title="Conduit fill calculation details.">Conduit Fill</th>
+                        <th rowspan="2" title="Rating of the Overcurrent Protection Device (breaker/fuse).">OCPD</th>
+                        <th colspan="2" title="The Equipment Grounding Conductor properties.">EGC</th>
+                        <th rowspan="2" title="The final effective ambient temperature after applying rooftop adders.">Eff. Temp °C</th>
+                        <th rowspan="2" title="The maximum current the circuit is expected to carry continuously.">Cont. Current</th>
+                        <th rowspan="2" title="Required design current per NEC (Cont. Current x 1.25 for solar).">Max Current</th>
+                        <th rowspan="2" title="The conductor's base ampacity at 90°C before any derating.">90°C Base Amp</th>
+                        <th rowspan="2" title="The 90°C ampacity after applying temperature and conduit fill correction factors.">Adjusted Amp</th>
+                        <th rowspan="2" title="The temperature rating of the terminals the wire is connected to.">Term Temp</th>
+                        <th rowspan="2" title="The final allowable ampacity. Must be >= Max Current OR OCPD for service lines.">Derated Amp</th>
+                        <th rowspan="2" title="The one-way length of the wire run in feet.">Length</th>
+                        <th rowspan="2" title="Percentage of voltage lost over the wire. Should be < 3%.">VD %</th>
+                        <th rowspan="2">Actions</th>
+                    </tr>
+                    <tr>
+                        <th>Initial</th>
+                        <th>Final</th>
+                        <th>Gauge</th>
+                        <th>Type</th>
+                        <th>Material</th>
+                        <th title="Total number of Current Carrying Conductors in the conduit.">CCC</th>
+                        <th title="Allowable fill % per NEC (31% for 2 wires, 40% for 3+).">Allow %</th>
+                        <th title="Actual calculated fill percentage.">Actual %</th>
+                        <th>Gauge</th>
+                        <th>Material</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="definitions-container">
+        <h2>Field Definitions</h2>
+        <dl>
+            <dt>ID</dt><dd>A unique identifier for the wiring leg (e.g., L-001).</dd>
+            <dt>Typical</dt><dd>The number of identical, parallel wires in a single run (e.g., 4 for the 4 strings combined in a home run).</dd>
+            <dt>Initial/Final Location</dt><dd>The start and end points of the wire run (e.g., PV Array to Junction Box).</dd>
+            <dt>Conductor (Gauge/Type/Material)</dt><dd>The properties of the main current-carrying wires. Gauge is the size (AWG), Type is the insulation (e.g., THWN-2), and Material is Copper or Aluminum.</dd>
+            <dt>Conduit</dt><dd>The nominal trade size of the conduit containing the wires (e.g., 3/4").</dd>
+            <dt># of Parallel Circuits</dt><dd>The number of separate circuits being run together.</dd>
+            <dt>CCC (Current Carrying Conductors)</dt><dd>The total number of conductors in the conduit that generate heat (hots and neutrals). Used to calculate the Conduit Fill Factor.</dd>
+            <dt>Fill %</dt><dd>The calculated percentage of the conduit's usable area that is filled by all wires, including the ground wire.</dd>
+            <dt>OCPD (Overcurrent Protection Device)</dt><dd>The amperage rating of the circuit breaker or fuse protecting the circuit.</dd>
+            <dt>EGC (Equipment Grounding Conductor)</dt><dd>The safety ground wire. Its size (Gauge) is determined by the OCPD rating, and its material is typically bare or insulated copper.</dd>
+            <dt>Temp. Corr. (°C / Factor)</dt><dd>A derating factor applied to wire ampacity based on the ambient temperature where it is installed. The factor is calculated from the temperature based on NEC tables.</dd>
+            <dt>Conduit Fill Factor</dt><dd>A derating factor applied when more than 3 CCCs are bundled in a conduit, accounting for heat buildup. It is calculated from the CCC value.</dd>
+            <dt>Cont. Current (Continuous Current)</dt><dd>The expected, steady-state current the circuit will carry during normal operation.</dd>
+            <dt>Max Current</dt><dd>For solar circuits, this is the value used to size wires and breakers, calculated as Continuous Current x 1.25 per NEC requirements.</dd>
+            <dt>Base Amp</dt><dd>The maximum ampacity of the conductor in ideal conditions, based on its size and temperature rating, before any derating factors are applied.</dd>
+            <dt>Derated Amp</dt><dd>The final, true ampacity of the conductor after applying all correction factors (temperature and conduit fill). This value must be greater than the Max Current.</dd>
+            <dt>Term Temp (Terminal Temperature Rating)</dt><dd>The maximum temperature rating of the terminals the wire is connected to (usually 75°C for standard breakers).</dd>
+            <dt>Length</dt><dd>The one-way length of the wire run in feet.</dd>
+            <dt>VD % (Voltage Drop)</dt><dd>The percentage of voltage lost over the length of the wire due to resistance. Should typically be kept below 3%.</dd>
+        </dl>
+    </div>
+    <script>
+        let wireLegs = [];
+        let legCounter = 1;
+        let editingIndex = null;
+        
+        // --- DATA CONSTANTS (NEC TABLES) ---
+
+        const necEgcSizes = { 15: '14', 20: '12', 30: '10', 40: '10', 60: '10', 100: '8', 200: '6', 225: '6', 300: '4', 400: '3', 500: '2', 600: '1' };
+        
+        // CORRECTED: Values from NEC Chapter 9, Table 5 (Approx. Area in Sq. In.)
+        const necConductorAreas = {
+            'THWN-2': { '14': 0.0097, '12': 0.0133, '10': 0.0211, '8': 0.0366, '6': 0.0507, '4': 0.0824, '2': 0.1158, '1': 0.1562, '1/0': 0.1857, '2/0': 0.2223, '3/0': 0.2679, '4/0': 0.3237 },
+            'XHHW-2': { '14': 0.0139, '12': 0.0172, '10': 0.0224, '8': 0.0373, '6': 0.0519, '4': 0.0845, '2': 0.1182, '1': 0.1557, '1/0': 0.1850, '2/0': 0.2215, '3/0': 0.2669, '4/0': 0.3227 },
+            'Bare':   { '14': 0.0032, '12': 0.0051, '10': 0.0081, '8': 0.0130, '6': 0.0206, '4': 0.0328, '2': 0.0521, '1': 0.0659, '1/0': 0.0827, '2/0': 0.1042, '3/0': 0.1315, '4/0': 0.1658 }
+        };
+
+        // CORRECTED: Values from NEC Chapter 9, Table 4 (EMT) for 100% Area
+        const necConduitTotalAreas = { '1/2': 0.304, '3/4': 0.533, '1': 0.864, '1-1/4': 1.496, '1-1/2': 2.036, '2': 3.356 };
+
+        const necTempCorrectionFactors = {
+            '90': { '21-25': 1.04, '26-30': 1.00, '31-35': 0.96, '36-40': 0.91, '41-45': 0.87, '46-50': 0.82, '51-55': 0.76, '56-60': 0.71, '61-70': 0.58, '71-80': 0.41 }
+        };
+        const rooftopAdders = { '0-1/2': 33, '1/2-3.5': 22, '3.5-12': 17 };
+        
+        const microInverterSpecs = {
+            'Enphase IQ8+': { maxContinuousOutputCurrent: 1.21 }, 'Enphase IQ8M': { maxContinuousOutputCurrent: 1.35 },
+            'Enphase IQ8A': { maxContinuousOutputCurrent: 1.45 }, 'Enphase IQ8H': { maxContinuousOutputCurrent: 1.58 },
+            'Enphase IQ8HC': { maxContinuousOutputCurrent: 1.58 }
+        };
+        const enphaseQCableSpecs = { 'Enphase Q Cable': { awg: '12', baseAmpacity90C: 30 } };
+        const resistanceTable = {
+            copper:   { '14': 3.14, '12': 1.98, '10': 1.24, '8': 0.778, '6': 0.491, '4': 0.308, '2': 0.194, '1': 0.154, '1/0': 0.122, '2/0': 0.0967, '3/0': 0.0766, '4/0': 0.0608 },
+            aluminum: { '12': 3.25, '10': 2.04, '8': 1.28, '6': 0.806, '4': 0.507, '2': 0.319, '1': 0.253, '1/0': 0.200, '2/0': 0.159, '3/0': 0.126, '4/0': 0.100 }
+        };
+        const ampacityTable = {
+            '90': { 
+                copper:   { '14': 30, '12': 30, '10': 40, '8': 55, '6': 75, '4': 95, '2': 130, '1': 150, '1/0': 170, '2/0': 195, '3/0': 225, '4/0': 260 },
+                aluminum: { '12': 25, '10': 35, '8': 45, '6': 65, '4': 85, '2': 115, '1': 130, '1/0': 150, '2/0': 170, '3/0': 195, '4/0': 225 }
+            },
+            '75': { 
+                copper:   { '14': 25, '12': 25, '10': 35, '8': 50, '6': 65, '4': 85, '2': 115, '1': 130, '1/0': 150, '2/0': 175, '3/0': 200, '4/0': 230 },
+                aluminum: { '12': 20, '10': 30, '8': 40, '6': 55, '4': 75, '2': 100, '1': 115, '1/0': 130, '2/0': 150, '3/0': 170, '4/0': 180 }
+            },
+            '60': { 
+                copper:   { '14': 20, '12': 20, '10': 30, '8': 40, '6': 55, '4': 70, '2': 95, '1': 110, '1/0': 125, '2/0': 145, '3/0': 165, '4/0': 195 },
+                aluminum: { '12': 15, '10': 25, '8': 35, '6': 45, '4': 60, '2': 80, '1': 95, '1/0': 110, '2/0': 125, '3/0': 145, '4/0': 170 }
+            }
+        };
+        const standardOcpdSizes = [15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200, 225, 250, 300];
+
+
+        function exportToCsv() {
+            if (wireLegs.length === 0) {
+                alert('There is no data to export.');
+                return;
+            }
+
+            // Define the headers for your CSV file
+            const headers = [
+                'ID', 'Typical', 'Initial Location', 'Final Location', 'Conductor Gauge', 'Conductor Type', 
+                'Conductor Material', 'Conduit', 'CCC', 'Allowable Fill %', 'Actual Fill %', 'OCPD (A)', 
+                'EGC Gauge', 'EGC Material', 'Effective Temp (C)', 'Cont. Current (A)', 'Max Current (A)', 
+                '90C Base Amp', 'Adjusted Amp', 'Terminal Temp (C)', 'Derated Amp', 'Length (ft)', 'VD %'
+            ];
+
+            // Helper function to format cells and handle commas/quotes
+            const formatCsvCell = (cell) => {
+                if (cell === null || cell === undefined) {
+                    return '';
+                }
+                const cellStr = String(cell);
+                if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                    return `"${cellStr.replace(/"/g, '""')}"`;
+                }
+                return cellStr;
+            };
+
+            // Convert the wireLegs data to an array of arrays
+            const rows = wireLegs.map(leg => {
+                const calc = leg.calculations;
+                return [
+                    leg.id,
+                    leg.typical,
+                    leg.initialLocation,
+                    leg.finalLocation,
+                    leg.conductorAwg,
+                    leg.conductorType,
+                    leg.conductorMaterial,
+                    isEnphaseQCable(leg.conductorType) ? 'N/A' : leg.conduitDiameter,
+                    leg.currentCarryingConductors,
+                    calc.allowableFillPercentage,
+                    calc.fillPercent,
+                    isEnphaseQCable(leg.conductorType) ? 'N/A' : leg.ocpd,
+                    isEnphaseQCable(leg.conductorType) ? 'N/A' : leg.egcAwg,
+                    isEnphaseQCable(leg.conductorType) ? 'N/A' : leg.egcMaterial,
+                    calc.effectiveAmbientTemp,
+                    leg.contCurrent > 0 ? leg.contCurrent.toFixed(2) : '0.00',
+                    calc.maxCurrent,
+                    calc.baseAmpacity90C,
+                    calc.adjustedAmpacity,
+                    isEnphaseQCable(leg.conductorType) ? 'N/A' : leg.termTempRating,
+                    calc.finalAllowableAmpacity,
+                    leg.length,
+                    calc.voltageDrop
+                ].map(formatCsvCell);
+            });
+
+            // Combine headers and rows into a single CSV string
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+
+            // Create a Blob and trigger the download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            
+            const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            link.setAttribute('download', `solar_wiring_schedule_${timestamp}.csv`);
+            
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importFromCsv(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.trim().split('\n');
+                
+                if (lines.length < 2) {
+                    alert('CSV file is empty or contains only a header.');
+                    return;
+                }
+
+                const headerLine = lines.shift().trim();
+                // Regex to handle quoted commas
+                const headers = headerLine.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g,'').trim());
+                
+                const importedLegs = [];
+                let errorLines = [];
+
+                lines.forEach((line, index) => {
+                    if (!line.trim()) return; // Skip empty lines
+
+                    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(v => v.replace(/"/g,'').trim());
+                    
+                    let leg = {};
+                    try {
+                        headers.forEach((header, i) => {
+                            const value = values[i];
+                            // Map CSV headers to the internal leg object properties
+                            switch(header) {
+                                case 'ID': leg.id = value; break;
+                                case 'Typical': leg.typical = parseInt(value) || 1; break;
+                                case 'Initial Location': leg.initialLocation = value; break;
+                                case 'Final Location': leg.finalLocation = value; break;
+                                case 'Conductor Gauge': leg.conductorAwg = value; break;
+                                case 'Conductor Type': leg.conductorType = value; break;
+                                case 'Conductor Material': leg.conductorMaterial = value; break;
+                                case 'Conduit': leg.conduitDiameter = value; break;
+                                case 'CCC': leg.currentCarryingConductors = parseInt(value) || 3; break;
+                                case 'OCPD (A)': leg.ocpd = parseInt(value) || 20; break;
+                                case 'EGC Gauge': leg.egcAwg = value; break;
+                                case 'EGC Material': leg.egcMaterial = value; break;
+                                case 'Cont. Current (A)': leg.contCurrent = parseFloat(value) || 0; break;
+                                case 'Terminal Temp (C)': leg.termTempRating = value; break;
+                                case 'Length (ft)': leg.length = parseInt(value) || 100; break;
+                                // For fields that might not be in older exports, we provide defaults
+                                case 'Voltage (V)': leg.voltage = parseInt(value) || 240; break;
+                                case 'Ambient Temp (C)': leg.ambientTemp = parseInt(value) || 32; break;
+                                case 'Microinverter': leg.microInverter = value; break;
+                                case 'Number of Panels/Micros': leg.panelCount = parseInt(value) || 1; break;
+                            }
+                        });
+                        
+                        // Add default values for any missing fields to ensure object integrity
+                        leg.parallelCircuits = leg.parallelCircuits || '1';
+                        leg.isRooftop = leg.isRooftop || false;
+                        leg.rooftopDistance = leg.rooftopDistance || '1/2-3.5';
+
+                        importedLegs.push(leg);
+                    } catch (err) {
+                        errorLines.push(index + 2); // Line number in the original file
+                    }
+                });
+
+                if (errorLines.length > 0) {
+                    alert(`Could not parse ${errorLines.length} rows. Please check lines: ${errorLines.join(', ')}`);
+                }
+
+                if (importedLegs.length > 0) {
+                    if (confirm(`Successfully parsed ${importedLegs.length} legs. This will replace your current schedule. Continue?`)) {
+                        wireLegs = importedLegs;
+                        // Re-run calculations for each imported leg
+                        wireLegs.forEach(leg => leg.calculations = calculateValues(leg));
+                        legCounter = wireLegs.length + 1;
+                        renderTable();
+                    }
+                }
+                
+                // Reset file input to allow re-uploading the same file
+                document.getElementById('csvFileInput').value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        // --- UI AND CALCULATION LOGIC ---
+
+        function isEnphaseQCable(conductorType) { return conductorType.includes('Enphase'); }
+
+        function handleConductorTypeChange() {
+            const isQCable = isEnphaseQCable(document.getElementById('conductorType').value);
+            const cccInput = document.getElementById('currentCarryingConductors');
+            const conduitInput = document.getElementById('conduitDiameter');
+
+            const fieldsToDisable = ['ocpd', 'conductorMaterial', 'egcAwg', 'egcMaterial', 'parallelCircuits', 'termTempRating', 'rooftopInstallation'];
+            fieldsToDisable.forEach(id => { document.getElementById(id).disabled = isQCable; });
+            conduitInput.disabled = isQCable;
+
+            if (isQCable) {
+                document.getElementById('conductorAwg').value = enphaseQCableSpecs[document.getElementById('conductorType').value].awg;
+                cccInput.value = 2;
+                conduitInput.value = 'NA';
+            } else {
+                if (cccInput.value === '2') { cccInput.value = '3'; }
+                if (conduitInput.value === 'NA') { conduitInput.value = '3/4'; }
+            }
+        }
+        
+        function updateEgcSize() {
+            const ocpd = parseInt(document.getElementById('ocpd').value) || 0;
+            let egcSize = '14'; // Default
+            const ocpdRatings = Object.keys(necEgcSizes).map(Number).sort((a, b) => a - b);
+            for (const rating of ocpdRatings) {
+                if (ocpd <= rating) {
+                    egcSize = necEgcSizes[rating];
+                    break;
+                }
+            }
+            if (ocpd > ocpdRatings[ocpdRatings.length-1]) egcSize = '1/0'; // Handle larger sizes
+            document.getElementById('egcAwg').value = egcSize;
+        }
+        
+        function calculateSolarValues() {
+            const microInverterType = document.getElementById('microInverter').value;
+            const panelCount = parseInt(document.getElementById('panelCount').value) || 1;
+            const contCurrentInput = document.getElementById('contCurrent');
+            
+            if (microInverterType && microInverterSpecs[microInverterType]) {
+                const totalCurrent = microInverterSpecs[microInverterType].maxContinuousOutputCurrent * panelCount;
+                contCurrentInput.value = totalCurrent.toFixed(2);
+                contCurrentInput.readOnly = true;
+            } else {
+                 contCurrentInput.readOnly = false;
+            }
+        }
+        
+        function suggestOcpd() {
+            calculateSolarValues(); 
+            const contCurrent = parseFloat(document.getElementById('contCurrent').value) || 0;
+            if (contCurrent === 0) {
+                alert('Please select a microinverter and panel count, or manually enter a continuous current.');
+                return;
+            }
+            const maxCurrent = contCurrent * 1.25;
+            const suggestedSize = standardOcpdSizes.find(size => size >= maxCurrent) || standardOcpdSizes[standardOcpdSizes.length - 1];
+            document.getElementById('ocpd').value = suggestedSize;
+            updateEgcSize();
+        }
+
+        function calculateValues(leg) {
+            // 1. Determine Effective Ambient Temperature
+            let effectiveAmbientTemp = parseInt(leg.ambientTemp) || 0;
+            if (leg.isRooftop) {
+                effectiveAmbientTemp += (rooftopAdders[leg.rooftopDistance] || 0);
+            }
+            
+            // 2. Get Temperature Correction Factor (always based on 90C for THWN-2/XHHW-2)
+            const tempFactors90C = necTempCorrectionFactors['90'];
+            let tempCorrFactor = 1.0;
+            for (const range in tempFactors90C) {
+                const [min, max] = range.split('-').map(Number);
+                if (effectiveAmbientTemp >= min && effectiveAmbientTemp <= max) {
+                    tempCorrFactor = tempFactors90C[range];
+                    break;
+                }
+            }
+            
+            // 3. Get Conduit Fill (Bundling) Factor
+            const ccc = parseInt(leg.currentCarryingConductors) || 0;
+            let conduitFillFactor = 1.0;
+            if (ccc >= 4 && ccc <= 6) conduitFillFactor = 0.8;
+            else if (ccc >= 7 && ccc <= 9) conduitFillFactor = 0.7;
+            else if (ccc >= 10 && ccc <= 20) conduitFillFactor = 0.5;
+            else if (ccc > 20) conduitFillFactor = 0.45;
+            
+            // Handle special case for Enphase Q-Cable
+            if (isEnphaseQCable(leg.conductorType)) {
+                const spec = enphaseQCableSpecs[leg.conductorType];
+                const adjustedAmp = spec.baseAmpacity90C * tempCorrFactor;
+                const maxCurrent = leg.contCurrent * 1.25;
+                const resistance = resistanceTable.copper[spec.awg];
+                const vdValue = (2 * leg.length * leg.contCurrent * resistance) / 1000;
+                const voltageDrop = (vdValue / leg.voltage) * 100;
+                return {
+                    maxCurrent: maxCurrent.toFixed(2),
+                    baseAmpacity90C: spec.baseAmpacity90C,
+                    adjustedAmpacity: adjustedAmp.toFixed(1),
+                    finalAllowableAmpacity: adjustedAmp.toFixed(1),
+                    voltageDrop: voltageDrop.toFixed(2),
+                    fillPercent: 'N/A', allowableFillPercentage: 'N/A',
+                    effectiveAmbientTemp: effectiveAmbientTemp
+                };
+            }
+
+            // 4. NEC Derating Procedure for standard conductors
+            const maxCurrent = leg.microInverter ? leg.contCurrent * 1.25 : leg.ocpd;
+            const baseAmpacity90C = ampacityTable['90']?.[leg.conductorMaterial.toLowerCase()]?.[leg.conductorAwg] || 0;
+            const adjustedAmpacity = baseAmpacity90C * tempCorrFactor * conduitFillFactor;
+            
+            // 5. Apply Terminal Temperature Limitation
+            const terminalLimitAmpacity = ampacityTable[leg.termTempRating]?.[leg.conductorMaterial.toLowerCase()]?.[leg.conductorAwg] || 0;
+            const finalAllowableAmpacity = Math.min(adjustedAmpacity, terminalLimitAmpacity);
+            
+            // 6. CORRECTED Conduit Fill Calculation
+            const mainCondArea = necConductorAreas[leg.conductorType]?.[leg.conductorAwg] || 0;
+            const egcCondArea = necConductorAreas[leg.egcMaterial]?.[leg.egcAwg] || 0;
+            const totalConductors = ccc + 1; // +1 for the EGC
+            let allowableFillPercentage = 40;
+            if (totalConductors === 1) allowableFillPercentage = 53;
+            if (totalConductors === 2) allowableFillPercentage = 31;
+            const totalConductorArea = (mainCondArea * ccc) + egcCondArea;
+            const totalConduitArea = necConduitTotalAreas[leg.conduitDiameter] || 0;
+            const fillPercent = totalConduitArea > 0 ? (totalConductorArea / totalConduitArea) * 100 : 0;
+            
+            // 7. Calculate Voltage Drop
+            const vdCurrent = leg.microInverter ? leg.contCurrent : (leg.ocpd * 0.8); // Use 80% of OCPD for non-solar load estimate
+            const resistance = resistanceTable[leg.conductorMaterial.toLowerCase()]?.[leg.conductorAwg] || 0;
+            const vdValue = (2 * leg.length * vdCurrent * resistance) / 1000;
+            const voltageDrop = (vdValue / leg.voltage) * 100;
+
+            return {
+                maxCurrent: maxCurrent.toFixed(2),
+                baseAmpacity90C: baseAmpacity90C,
+                adjustedAmpacity: adjustedAmpacity.toFixed(1),
+                finalAllowableAmpacity: finalAllowableAmpacity.toFixed(1),
+                voltageDrop: voltageDrop.toFixed(2),
+                fillPercent: fillPercent.toFixed(1),
+                allowableFillPercentage: allowableFillPercentage,
+                effectiveAmbientTemp: effectiveAmbientTemp
+            };
+        }
+
+        function getFormValues() {
+            return {
+                id: document.getElementById('legId').value,
+                typical: document.getElementById('typical').value,
+                initialLocation: document.getElementById('initialLocation').value,
+                finalLocation: document.getElementById('finalLocation').value,
+                conductorAwg: document.getElementById('conductorAwg').value,
+                conductorType: document.getElementById('conductorType').value,
+                conductorMaterial: document.getElementById('conductorMaterial').value,
+                conduitDiameter: document.getElementById('conduitDiameter').value,
+                parallelCircuits: document.getElementById('parallelCircuits').value,
+                currentCarryingConductors: document.getElementById('currentCarryingConductors').value,
+                ocpd: document.getElementById('ocpd').value,
+                egcAwg: document.getElementById('egcAwg').value,
+                egcMaterial: document.getElementById('egcMaterial').value,
+                ambientTemp: document.getElementById('ambientTemp').value,
+                isRooftop: document.getElementById('rooftopInstallation').checked,
+                rooftopDistance: document.getElementById('rooftopDistance').value,
+                contCurrent: parseFloat(document.getElementById('contCurrent').value) || 0,
+                termTempRating: document.getElementById('termTempRating').value,
+                length: parseInt(document.getElementById('length').value),
+                voltage: parseInt(document.getElementById('voltage').value),
+                microInverter: document.getElementById('microInverter').value,
+                panelCount: document.getElementById('panelCount').value,
+            };
+        }
+
+        function addOrUpdateLeg() {
+            if (editingIndex !== null) { updateLeg(); } 
+            else { addLeg(); }
+        }
+
+        function addLeg() {
+            const leg = getFormValues();
+            leg.id = leg.id || `L-${String(legCounter).padStart(3, '0')}`;
+            leg.calculations = calculateValues(leg);
+            wireLegs.push(leg);
+            legCounter++;
+            renderTable();
+            clearForm();
+        }
+
+        function updateLeg() {
+            const leg = getFormValues();
+            leg.id = wireLegs[editingIndex].id; // Retain original ID
+            leg.calculations = calculateValues(leg);
+            wireLegs[editingIndex] = leg;
+            renderTable();
+            clearForm();
+        }
+        
+        function editLeg(index) {
+            const leg = wireLegs[index];
+            Object.keys(leg).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = leg[key];
+                    } else {
+                        element.value = leg[key];
+                    }
+                }
+            });
+            editingIndex = index;
+            
+            document.getElementById('addUpdateButton').textContent = 'Update Leg';
+            document.getElementById('addUpdateButton').classList.add('btn-update');
+            
+            document.getElementById('rooftopInstallation').dispatchEvent(new Event('change'));
+            handleConductorTypeChange();
+            updateEgcSize();
+            calculateSolarValues();
+            window.scrollTo(0, 0);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('scheduleBody');
+            document.getElementById('scheduleTable').style.display = wireLegs.length > 0 ? 'table' : 'none';
+            document.getElementById('emptyState').style.display = wireLegs.length > 0 ? 'none' : 'block';
+
+            tbody.innerHTML = wireLegs.map((leg, index) => {
+                const calc = leg.calculations;
+                const isQCable = isEnphaseQCable(leg.conductorType);
+                const deratedAmpOK = parseFloat(calc.finalAllowableAmpacity) >= parseFloat(calc.maxCurrent);
+                const fillOK = parseFloat(calc.fillPercent) <= parseFloat(calc.allowableFillPercentage);
+                
+                return `
+                    <tr>
+                        <td>${leg.id}</td>
+                        <td>${leg.typical}</td>
+                        <td>${leg.initialLocation}</td>
+                        <td>${leg.finalLocation}</td>
+                        <td>${leg.conductorAwg}</td>
+                        <td>${leg.conductorType}</td>
+                        <td>${leg.conductorMaterial}</td>
+                        <td>${isQCable ? 'N/A' : leg.conduitDiameter + '"'}</td>
+                        <td>${leg.currentCarryingConductors}</td>
+                        <td class="intermediate-calc">${isQCable ? 'N/A' : calc.allowableFillPercentage + '%'}</td>
+                        <td class="calculated-field ${fillOK ? '' : 'warning'}">${isQCable ? 'N/A' : calc.fillPercent + '%'}</td>
+                        <td>${isQCable ? 'N/A' : leg.ocpd + 'A'}</td>
+                        <td>${isQCable ? 'N/A' : leg.egcAwg}</td>
+                        <td>${isQCable ? 'N/A' : leg.egcMaterial}</td>
+                        <td class="intermediate-calc">${calc.effectiveAmbientTemp}°C</td>
+                        <td>${leg.contCurrent > 0 ? leg.contCurrent.toFixed(2) + 'A' : 'N/A'}</td>
+                        <td class="calculated-field">${calc.maxCurrent}A</td>
+                        <td class="intermediate-calc">${calc.baseAmpacity90C}A</td>
+                        <td class="intermediate-calc">${calc.adjustedAmpacity}A</td>
+                        <td>${isQCable ? 'N/A' : leg.termTempRating}°C</td>
+                        <td class="calculated-field ${deratedAmpOK ? '' : 'error'}">${calc.finalAllowableAmpacity}A</td>
+                        <td>${leg.length}ft</td>
+                        <td class="calculated-field ${calc.voltageDrop > 3 ? 'error' : ''}">${calc.voltageDrop}%</td>
+                        <td class="actions-cell">
+                            <button class="btn btn-edit" onclick="editLeg(${index})">Edit</button>
+                            <button class="btn btn-danger" onclick="removeLeg(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function removeLeg(index) {
+            if (editingIndex === index) { clearForm(); }
+            wireLegs.splice(index, 1);
+            if (editingIndex > index) { editingIndex--; }
+            renderTable();
+        }
+
+        function clearForm() {
+            document.getElementById('scheduleForm').reset();
+            editingIndex = null;
+            document.getElementById('addUpdateButton').textContent = 'Add Wiring Leg';
+            document.getElementById('addUpdateButton').classList.remove('btn-update');
+            
+            handleConductorTypeChange();
+            updateEgcSize();
+            calculateSolarValues();
+            document.getElementById('rooftopDistanceGroup').style.display = 'none';
+        }
+        
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all wiring legs?')) {
+                wireLegs = [];
+                legCounter = 1;
+                renderTable();
+                clearForm();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addUpdateButton').addEventListener('click', addOrUpdateLeg);
+            document.getElementById('clearAllButton').addEventListener('click', clearAll);
+            document.getElementById('exportCsvButton').addEventListener('click', exportToCsv);
+            document.getElementById('suggestOcpdBtn').addEventListener('click', suggestOcpd);
+            document.getElementById('importCsvButton').addEventListener('click', () => document.getElementById('csvFileInput').click());
+            document.getElementById('csvFileInput').addEventListener('change', importFromCsv);
+            
+            document.getElementById('ocpd').addEventListener('change', updateEgcSize);
+            
+            const solarInputs = ['microInverter', 'panelCount', 'contCurrent'];
+            solarInputs.forEach(id => document.getElementById(id).addEventListener('change', calculateSolarValues) );
+
+            document.getElementById('conductorType').addEventListener('change', handleConductorTypeChange);
+            document.getElementById('rooftopInstallation').addEventListener('change', (e) => {
+            document.getElementById('rooftopDistanceGroup').style.display = e.target.checked ? 'flex' : 'none';
+            });
+            
+            updateEgcSize();
+            calculateSolarValues();
+            renderTable();
+        });
+
+    </script>
+</body>
+</html>

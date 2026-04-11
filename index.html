@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Design Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tool-card h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .tool-card p {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .feature-list li {
+            color: #34495e;
+            margin: 8px 0;
+            position: relative;
+            padding-left: 25px;
+            font-size: 0.95rem;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 20px rgba(230, 126, 34, 0.3);
+        }
+
+        .footer {
+            background: rgba(44, 62, 80, 0.1);
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .footer p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .nec-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+            
+            .tool-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Solar Design Tools</h1>
+            <p>Professional electrical design tools for solar photovoltaic installations<br>
+            NEC-compliant calculations and comprehensive wire scheduling</p>
+        </div>
+
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">📊</div>
+                </div>
+                <h2>Wiring Schedule Generator</h2>
+                <p>Create comprehensive wiring schedules for solar installations with detailed calculations, conductor specifications, and code compliance documentation.</p>
+                
+                <ul class="feature-list">
+                    <li>Complete conductor specifications and ampacity calculations</li>
+                    <li>Temperature and conduit fill derating factors</li>
+                    <li>Enphase Q-Cable support with automatic field management</li>
+                    <li>Microinverter current calculations</li>
+                    <li>Voltage drop analysis with visual warnings</li>
+                    <li>Export schedules to CSV format</li>
+                    <li>Edit and update existing wiring legs</li>
+                </ul>
+                
+                <div class="nec-badge">NEC Table 310.16 Compliant</div>
+                <br><br>
+                
+                <a href="solar_wiring_schedule.html" class="btn">Open Wiring Schedule Tool</a>
+            </div>
+
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">🔍</div>
+                </div>
+                <h2>Wire Sizing Calculator</h2>
+                <p>Determine the correct wire gauge and type for each leg of your solar installation based on current, voltage drop, and environmental conditions.</p>
+                
+                <ul class="feature-list">
+                    <li>Equipment-specific current guidance and calculations</li>
+                    <li>Microinverter home run sizing with junction box support</li>
+                    <li>Rooftop temperature adder calculations</li>
+                    <li>Multiple installation methods (conduit, free air, direct burial)</li>
+                    <li>Automatic OCPD and EGC sizing recommendations</li>
+                    <li>Copper vs aluminum material optimization</li>
+                    <li>Real-time ampacity and voltage drop validation</li>
+                </ul>
+                
+                <div class="nec-badge">NEC Article 690 Solar Compliant</div>
+                <br><br>
+                
+                <a href="solar_wire_sizing_tool.html" class="btn btn-secondary">Open Wire Sizing Calculator</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Important:</strong> These tools provide calculations based on the National Electrical Code (NEC). 
+            Always verify calculations with a licensed electrician and comply with local electrical codes and permit requirements. 
+            Tools are for design assistance only and do not replace professional electrical engineering judgment.</p>
+        </div>
+    </div>
+</body>
+</html>

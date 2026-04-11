@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Wire Sizing Calculator - NEC Compliant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-section h2 {
+            color: #27ae60;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+        }
+
+        .result-item {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .result-item h3 {
+            color: #27ae60;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .result-item p {
+            color: #2c3e50;
+            margin: 5px 0;
+            font-size: 0.95rem;
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .warning {
+            background: rgba(241, 196, 15, 0.1);
+            border-left: 4px solid #f1c40f;
+            color: #856404;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid #e74c3c;
+            color: #721c24;
+        }
+
+        .calculation-steps {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .calculation-steps h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .calculation-steps ol {
+            padding-left: 20px;
+        }
+
+        .calculation-steps li {
+            margin: 5px 0;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .equipment-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .equipment-card {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equipment-card.selected {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-box {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-box h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #2c3e50;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Solar Wire Sizing Calculator</h1>
+            <p>NEC-compliant wire sizing for solar installations</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2>📋 Installation Parameters</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="legDescription">Wire Run Description:</label>
+                        <input type="text" id="legDescription" placeholder="e.g., PV Array to Combiner Box">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fromEquipment">From Equipment:</label>
+                        <select id="fromEquipment" onchange="updateCurrentHelp()">
+                            <option value="pv-module">PV Module/String</option>
+                            <option value="combiner">Combiner Box</option>
+                            <option value="junction-box">Junction Box (AC)</option>
+                            <option value="inverter">String Inverter</option>
+                            <option value="microinverter">Microinverter</option>
+                            <option value="microinverter-group" selected>Multiple Microinverters</option>
+                            <option value="optimizer">Power Optimizer</option>
+                            <option value="disconnect">DC Disconnect</option>
+                            <option value="meter">Production Meter</option>
+                            <option value="panel">Main Panel</option>
+                            <option value="subpanel">Sub Panel</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="toEquipment">To Equipment:</label>
+                        <select id="toEquipment">
+                            <option value="combiner">Combiner Box</option>
+                            <option value="junction-box">Junction Box (AC)</option>
+                            <option value="inverter">String Inverter</option>
+                            <option value="microinverter">Microinverter</option>
+                            <option value="optimizer">Power Optimizer</option>
+                            <option value="disconnect">DC Disconnect</option>
+                            <option value="meter">Production Meter</option>
+                            <option value="panel" selected>Main Panel</option>
+                            <option value="subpanel">Sub Panel</option>
+                            <option value="load">Load</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="systemType">System Type:</label>
+                        <select id="systemType">
+                            <option value="dc">DC Circuit (PV Side)</option>
+                            <option value="ac">AC Circuit (Grid Side)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="voltage">System Voltage (V):</label>
+                        <select id="voltage">
+                            <option value="12">12V DC</option>
+                            <option value="24">24V DC</option>
+                            <option value="48">48V DC</option>
+                            <option value="120">120V DC</option>
+                            <option value="240">240V DC</option>
+                            <option value="480">480V DC</option>
+                            <option value="600">600V DC</option>
+                            <option value="1000">1000V DC</option>
+                            <option value="120ac">120V AC</option>
+                            <option value="240ac" selected>240V AC</option>
+                            <option value="480ac">480V AC</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="microinverterHelperGroup" style="display: none;">
+                        <label for="numMicroinverters">Number of Microinverters in Home Run:</label>
+                        <input type="number" id="numMicroinverters" min="1" max="20" value="4" onchange="calculateMicroinverterCurrent()">
+                    </div>
+
+                    <div class="form-group" id="microinverterTypeGroup" style="display: none;">
+                        <label for="microinverterType">Microinverter Type:</label>
+                        <select id="microinverterType" onchange="calculateMicroinverterCurrent()">
+                            <option value="">Select Type</option>
+                            <option value="IQ8+" selected>Enphase IQ8+ (1.21A each)</option>
+                            <option value="IQ8M">Enphase IQ8M (1.35A each)</option>
+                            <option value="IQ8A">Enphase IQ8A (1.45A each)</option>
+                            <option value="IQ8H">Enphase IQ8H (1.58A each)</option>
+                            <option value="IQ8HC">Enphase IQ8HC (1.58A each)</option>
+                            <option value="IQ7+">Enphase IQ7+ (1.21A each)</option>
+                            <option value="IQ7A">Enphase IQ7A (1.45A each)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="current">Continuous Current (A):</label>
+                        <input type="number" id="current" step="0.1" min="0" placeholder="Enter current in amperes">
+                        <small id="currentHelper" style="color: #7f8c8d; font-size: 0.8rem; margin-top: 5px;"></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wireLength">Wire Run Length (ft):</label>
+                        <input type="number" id="wireLength" min="1" value="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ambientTemp">Ambient Temperature (°C):</label>
+                        <input type="number" id="ambientTemp" value="30" min="-40" max="80">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isRooftop">
+                        <label for="isRooftop">Rooftop Installation (adds temperature adder)</label>
+                    </div>
+
+                    <div class="form-group" id="rooftopDistanceGroup" style="display: none;">
+                        <label for="rooftopDistance">Distance Above Roof:</label>
+                        <select id="rooftopDistance">
+                            <option value="0-0.5">0 - 1/2 inch (+33°C)</option>
+                            <option value="0.5-3.5" selected>1/2 - 3.5 inches (+22°C)</option>
+                            <option value="3.5-12">3.5 - 12 inches (+17°C)</option>
+                            <option value="12+">Over 12 inches (+0°C)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="conduitType">Installation Method:</label>
+                        <select id="conduitType">
+                            <option value="free-air">Free Air / Cable Tray</option>
+                            <option value="conduit" selected>In Conduit/Raceway</option>
+                            <option value="direct-burial">Direct Burial</option>
+                            <option value="enphase-q">Enphase Q-Cable</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="conductorsInConduitGroup">
+                        <label for="conductorsInConduit">Current-Carrying Conductors in Conduit:</label>
+                        <input type="number" id="conductorsInConduit" value="3" min="2" max="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxVoltageDrop">Maximum Voltage Drop (%):</label>
+                        <select id="maxVoltageDrop">
+                            <option value="1.5">1.5% (Best Practice)</option>
+                            <option value="2">2% (Recommended)</option>
+                            <option value="3" selected>3% (Code Maximum)</option>
+                            <option value="5">5% (Emergency/Temporary)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materialPreference">Material Preference:</label>
+                        <select id="materialPreference">
+                            <option value="copper" selected>Copper (Preferred)</option>
+                            <option value="aluminum">Aluminum (Cost Effective)</option>
+                            <option value="auto">Auto-Select Best Option</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="calculateWireSize()">🔍 Calculate Wire Size</button>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 Microinverter Home Run Design</h4>
+                    <p>For microinverter installations:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li><strong>Multiple Microinverters:</strong> Select this when sizing the home run from a junction box that combines multiple microinverters</li>
+                        <li><strong>Typical Setup:</strong> 4-10 microinverters → Junction Box → Home Run to Main Panel</li>
+                        <li><strong>Current Calculation:</strong> Sum of all microinverter AC output currents</li>
+                        <li><strong>NEC Compliance:</strong> Each microinverter output is typically 1.2-1.6A at 240V AC</li>
+                        <li><strong>Wire Type:</strong> Use THWN-2 copper for AC home runs</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 What This Tool Determines:</h4>
+                    <p>This calculator finds the minimum wire size based on:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Current carrying capacity (ampacity) per NEC Table 310.16</li>
+                        <li>Voltage drop limitations (typically 3% max)</li>
+                        <li>Temperature derating factors (NEC Table 310.15(B)(1))</li>
+                        <li>Bundling/conduit fill adjustments (NEC Table 310.15(C)(1))</li>
+                        <li>Solar-specific requirements (NEC Article 690)</li>
+                        <li>Rooftop installation temperature adders</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>📊 Wire Sizing Results</h2>
+                <div id="results">
+                    <p style="color: #7f8c8d; text-align: center; padding: 40px;">
+                        Enter your installation parameters and click "Calculate Wire Size" to see the recommended wire specifications.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NEC Table 310.16 ampacity values (90°C column for derating calculations)
+        const ampacityTable = {
+            copper: {
+                '14': 30, '12': 35, '10': 40, '8': 55, '6': 75, '4': 95, 
+                '2': 130, '1': 150, '1/0': 170, '2/0': 195, '3/0': 225, 
+                '4/0': 260, '250': 290, '300': 320, '350': 350, '400': 380, '500': 430
+            },
+            aluminum: {
+                '12': 25, '10': 35, '8': 45, '6': 65, '4': 85, '2': 115, 
+                '1': 130, '1/0': 150, '2/0': 170, '3/0': 195, '4/0': 225, 
+                '250': 260, '300': 285, '350': 310, '400': 335, '500': 375
+            }
+        };
+
+        // Terminal temperature ampacity (75°C for most equipment)
+        const ampacityTable75C = {
+            copper: {
+                '14': 25, '12': 30, '10': 35, '8': 50, '6': 65, '4': 85, 
+                '2': 115, '1': 130, '1/0': 150, '2/0': 175, '3/0': 200, 
+                '4/0': 230, '250': 255, '300': 285, '350': 310, '400': 335, '500': 380
+            },
+            aluminum: {
+                '12': 25, '10': 30, '8': 40, '6': 55, '4': 75, '2': 100, 
+                '1': 115, '1/0': 130, '2/0': 150, '3/0': 170, '4/0': 200, 
+                '250': 225, '300': 250, '350': 270, '400': 290, '500': 330
+            }
+        };
+
+        // DC resistance values (ohms per 1000 feet at 75°C)
+        const resistanceTable = {
+            copper: {
+                '14': 3.07, '12': 1.93, '10': 1.21, '8': 0.764, '6': 0.491, 
+                '4': 0.308, '2': 0.194, '1': 0.154, '1/0': 0.122, '2/0': 0.0967, 
+                '3/0': 0.0766, '4/0': 0.0608, '250': 0.0515, '300': 0.0429, 
+                '350': 0.0367, '400': 0.0321, '500': 0.0258
+            },
+            aluminum: {
+                '12': 3.18, '10': 2.00, '8': 1.26, '6': 0.808, '4': 0.508, 
+                '2': 0.319, '1': 0.253, '1/0': 0.201, '2/0': 0.159, '3/0': 0.126, 
+                '4/0': 0.100, '250': 0.0847, '300': 0.0707, '350': 0.0605, 
+                '400': 0.0529, '500': 0.0424
+            }
+        };
+
+        // Wire gauges in order from smallest to largest
+        const wireGauges = ['14', '12', '10', '8', '6', '4', '2', '1', '1/0', '2/0', '3/0', '4/0', '250', '300', '350', '400', '500'];
+
+        // Temperature correction factors (NEC Table 310.15(B)(1) for 90°C base)
+        const tempCorrectionFactors = {
+            '10': 1.15, '11-15': 1.12, '16-20': 1.08, '21-25': 1.04, '26-30': 1.00,
+            '31-35': 0.96, '36-40': 0.91, '41-45': 0.87, '46-50': 0.82,
+            '51-55': 0.76, '56-60': 0.71, '61-70': 0.58, '71-80': 0.41, '81-90': 0.00
+        };
+
+        // Rooftop temperature adders (°C)
+        const rooftopAdders = {
+            '0-0.5': 33, '0.5-3.5': 22, '3.5-12': 17, '12+': 0
+        };
+
+        // Conduit fill adjustment factors (NEC Table 310.15(C)(1))
+        const conduitFillFactors = {
+            4: 0.8, 5: 0.8, 6: 0.8, 7: 0.7, 8: 0.7, 9: 0.7,
+            10: 0.5, 20: 0.5, 30: 0.45, 40: 0.4, 41: 0.35
+        };
+
+        // Recommended wire types for different applications
+        const wireTypes = {
+            'dc': {
+                'conduit': 'THWN-2 or XHHW-2',
+                'free-air': 'THWN-2, XHHW-2, or USE-2',
+                'direct-burial': 'USE-2 or XHHW-2',
+                'enphase-q': 'Enphase Q-Cable (Listed Assembly)'
+            },
+            'ac': {
+                'conduit': 'THWN-2 or XHHW-2',
+                'free-air': 'THWN-2 or XHHW-2',
+                'direct-burial': 'THWN-2 (in conduit) or USE-2',
+                'enphase-q': 'Enphase Engage Cable'
+            }
+        };
+
+        // Microinverter AC output current specifications
+        const microinverterCurrents = {
+            'IQ8+': 1.21, 'IQ8M': 1.35, 'IQ8A': 1.45, 'IQ8H': 1.58, 'IQ8HC': 1.58,
+            'IQ7+': 1.21, 'IQ7A': 1.45
+        };
+
+        // Event listeners
+        document.getElementById('isRooftop').addEventListener('change', function() {
+            document.getElementById('rooftopDistanceGroup').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('conduitType').addEventListener('change', function() {
+            document.getElementById('conductorsInConduitGroup').style.display = 
+                this.value === 'conduit' ? 'block' : 'none';
+        });
+
+        function sanitizeHTML(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
+        function updateCurrentHelp() {
+            const fromEquipment = document.getElementById('fromEquipment').value;
+            const microHelperGroup = document.getElementById('microinverterHelperGroup');
+            const microTypeGroup = document.getElementById('microinverterTypeGroup');
+            const currentHelper = document.getElementById('currentHelper');
+            
+            const currentInput = document.getElementById('current');
+            if (fromEquipment === 'microinverter-group') {
+                microHelperGroup.style.display = 'block';
+                microTypeGroup.style.display = 'block';
+                currentHelper.textContent = 'Current will be calculated based on microinverter type and quantity';
+                currentInput.readOnly = true;
+                calculateMicroinverterCurrent();
+            } else {
+                microHelperGroup.style.display = 'none';
+                microTypeGroup.style.display = 'none';
+                
+                currentInput.readOnly = false;
+                // Provide helpful current guidance based on equipment type
+                const currentGuidance = {
+                    'pv-module': 'Use module Isc × 1.25 for single module, or string Isc for series',
+                    'combiner': 'Sum of all input string currents',
+                    'junction-box': 'Sum of all connected microinverter currents',
+                    'inverter': 'Inverter maximum continuous AC output current',
+                    'microinverter': 'Individual microinverter AC output current (typically 1.2-1.6A)',
+                    'optimizer': 'Use string current rating',
+                    'disconnect': 'Maximum current through the disconnect',
+                    'meter': 'Total system AC current',
+                    'panel': 'Total branch circuit current',
+                    'subpanel': 'Subpanel load current'
+                };
+                
+                currentHelper.textContent = currentGuidance[fromEquipment] || 'Enter the continuous current for this circuit';
+            }
+        }
+
+        function calculateMicroinverterCurrent() {
+            const numMicros = parseInt(document.getElementById('numMicroinverters').value) || 0;
+            const microType = document.getElementById('microinverterType').value;
+            
+            if (numMicros > 0 && microType && microinverterCurrents[microType]) {
+                const totalCurrent = numMicros * microinverterCurrents[microType];
+                document.getElementById('current').value = totalCurrent.toFixed(2);
+                
+                // Auto-set system type to AC for microinverter home runs
+                document.getElementById('systemType').value = 'ac';
+                
+                // Update helper text
+                const currentHelper = document.getElementById('currentHelper');
+                currentHelper.textContent = `${numMicros} × ${microinverterCurrents[microType]}A = ${totalCurrent.toFixed(2)}A total`;
+            }
+        }
+        document.getElementById('isRooftop').addEventListener('change', function() {
+            document.getElementById('rooftopDistanceGroup').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('conduitType').addEventListener('change', function() {
+            document.getElementById('conductorsInConduitGroup').style.display = 
+                this.value === 'conduit' ? 'block' : 'none';
+        });
+
+        function getTempCorrectionFactor(temp) {
+            for (const range in tempCorrectionFactors) {
+                if (range.includes('-')) {
+                    const [min, max] = range.split('-').map(Number);
+                    if (temp >= min && temp <= max) {
+                        return tempCorrectionFactors[range];
+                    }
+                } else {
+                    const singleTemp = Number(range);
+                    if (temp <= singleTemp) {
+                        return tempCorrectionFactors[range];
+                    }
+                }
+            }
+            return 0.00; // Too hot
+        }
+
+        function getConduitFillFactor(numConductors) {
+            if (numConductors <= 3) return 1.0;
+            
+            // Sort keys numerically to ensure correct order
+            const sortedCounts = Object.keys(conduitFillFactors).map(Number).sort((a, b) => a - b);
+
+            for (const count of sortedCounts) {
+                if (numConductors <= count) {
+                    return conduitFillFactors[count];
+                }
+            }
+            return 0.35; // For very large bundles (over 41)
+        }
+
+        function calculateVoltageDropMV(current, length, resistance, voltage) {
+            // For DC systems: VD = 2 * I * L * R / 1000
+            // For AC single-phase: VD = 2 * I * L * R / 1000
+            const voltageDrop = (2 * current * length * resistance) / 1000;
+            return voltage > 0 ? (voltageDrop / voltage) * 100 : 0;
+        }
+
+        function findMinimumWireSize(designCurrent, tempCorrectionFactor, conduitFillFactor, material, maxVoltageDropPercent, current, length, voltage) {
+            const results = [];
+            const deratingFactor = tempCorrectionFactor * conduitFillFactor;
+
+            for (const gauge of wireGauges) {
+                if (!ampacityTable[material][gauge] || !ampacityTable75C[material][gauge]) continue;
+
+                const ampacity90C = ampacityTable[material][gauge];
+                const ampacity75C = ampacityTable75C[material][gauge];
+
+                const adjustedAmpacity = ampacity90C * deratingFactor;
+                const finalAllowableAmpacity = Math.min(adjustedAmpacity, ampacity75C);
+
+                if (finalAllowableAmpacity < designCurrent) continue;
+
+                const resistance = resistanceTable[material][gauge];
+                if (!resistance) continue;
+
+                const voltageDropPercent = calculateVoltageDropMV(current, length, resistance, voltage);
+
+                results.push({
+                    gauge,
+                    finalAllowableAmpacity,
+                    adjustedAmpacity: adjustedAmpacity.toFixed(1),
+                    voltageDropPercent,
+                    resistance,
+                });
+
+                if (finalAllowableAmpacity >= designCurrent && voltageDropPercent <= maxVoltageDropPercent) {
+                    break;
+                }
+            }
+            
+            return results;
+        }
+
+        function calculateWireSize() {
+            try {
+                // Get input values
+                const current = parseFloat(document.getElementById('current').value);
+                const wireLength = parseFloat(document.getElementById('wireLength').value);
+                const ambientTemp = parseFloat(document.getElementById('ambientTemp').value);
+                const isRooftop = document.getElementById('isRooftop').checked;
+                const rooftopDistance = document.getElementById('rooftopDistance').value;
+                const conduitType = document.getElementById('conduitType').value;
+                const conductorsInConduit = parseInt(document.getElementById('conductorsInConduit').value);
+                const maxVoltageDrop = parseFloat(document.getElementById('maxVoltageDrop').value);
+                const materialPreference = document.getElementById('materialPreference').value;
+                const systemType = document.getElementById('systemType').value;
+                const voltage = parseFloat(document.getElementById('voltage').value.replace('ac', ''));
+                const legDescription = document.getElementById('legDescription').value;
+
+                // Validation
+                if (!current || !wireLength || current <= 0 || wireLength <= 0) {
+                    document.getElementById('results').innerHTML = 
+                        '<div class="result-item error"><h3>⚠️ Input Error</h3><p>Please enter valid current and wire length values.</p></div>';
+                    return;
+                }
+
+                // Calculate effective ambient temperature
+                let effectiveTemp = ambientTemp;
+                if (isRooftop) {
+                    effectiveTemp += rooftopAdders[rooftopDistance] || 0;
+                }
+
+                // Continuous current multiplier for solar/continuous loads (NEC 690.8(A), 215.2)
+                const designCurrent = current * 1.25;
+
+                // Get temperature correction factor
+                const tempCorrectionFactor = getTempCorrectionFactor(effectiveTemp);
+
+                // Get conduit fill factor
+                const conduitFillFactor = conduitType === 'conduit' ? 
+                    getConduitFillFactor(conductorsInConduit) : 1.0;
+
+                // Calculate required ampacity (before derating)
+                const requiredAmpacity = designCurrent / (tempCorrectionFactor * conduitFillFactor);
+
+                // Calculate for different materials
+                const materials = materialPreference === 'auto' ? ['copper', 'aluminum'] : [materialPreference];
+                let bestResults = [];
+
+                for (const material of materials) {
+                    const wireResults = findMinimumWireSize(
+                        designCurrent, tempCorrectionFactor, conduitFillFactor, material, maxVoltageDrop, current, wireLength, voltage
+                    );
+                    
+                    if (wireResults.length > 0) {
+                        const viableOptions = wireResults.filter(r => r.finalAllowableAmpacity >= designCurrent && r.voltageDropPercent <= maxVoltageDrop);
+                        if (viableOptions.length > 0) { 
+                            bestResults.push({
+                                material,
+                                result: viableOptions[0],
+                                allResults: wireResults
+                            });
+                        }
+                    }
+                }
+
+                // Display results
+                displayResults({
+                    current,
+                    designCurrent,
+                    wireLength,
+                    ambientTemp,
+                    effectiveTemp,
+                    tempCorrectionFactor,
+                    conduitFillFactor,
+                    requiredAmpacity,
+                    maxVoltageDrop,
+                    systemType,
+                    voltage,
+                    conduitType,
+                    legDescription,
+                    bestResults
+                });
+
+            } catch (error) {
+                console.error('Calculation error:', error);
+                document.getElementById('results').innerHTML = 
+                    '<div class="result-item error"><h3>Calculation Error</h3><p>An error occurred during calculation. Please check your inputs.</p></div>';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            let html = '';
+
+            // Header with circuit description
+            if (data.legDescription) {
+                html += `<div class="result-item"> 
+                    <h3>${sanitizeHTML(data.legDescription)}</h3>
+                    <p><strong>System Type:</strong> ${data.systemType.toUpperCase()}</p>
+                    <p><strong>Installation:</strong> ${data.conduitType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                </div>`;
+            }
+
+            // Design calculations summary
+            html += `<div class="calculation-steps">
+                <h4>Design Calculations</h4>
+                <ol>
+                    <li>Continuous Current: <strong>${data.current} A</strong></li>
+                    <li>Design Current (×1.25): <strong>${data.designCurrent.toFixed(1)} A</strong></li>
+                    <li>Ambient Temperature: <strong>${data.ambientTemp}°C</strong></li>
+                    <li>Effective Temperature: <strong>${data.effectiveTemp}°C</strong></li>
+                    <li>Temperature Correction Factor: <strong>${data.tempCorrectionFactor.toFixed(3)}</strong></li>
+                    <li>Conduit Fill Factor: <strong>${data.conduitFillFactor.toFixed(3)}</strong></li>
+                    <li>Required Base Ampacity (90°C): <strong>${data.requiredAmpacity.toFixed(1)} A</strong></li>
+                </ol>
+            </div>`;
+
+            if (data.bestResults.length === 0) {
+                html += `<div class="result-item error">
+                    <h3>No Suitable Wire Found</h3>
+                    <p>No wire size meets both ampacity and voltage drop requirements. Consider:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Shorter wire runs</li>
+                        <li>Higher voltage system</li>
+                        <li>Parallel wire runs</li>
+                        <li>Different installation method</li>
+                    </ul>
+                </div>`;
+            } else {
+                data.bestResults.forEach((materialResult, index) => {
+                    const result = materialResult.result;
+                    const material = materialResult.material;
+                    const wireType = wireTypes[data.systemType][data.conduitType];
+                    
+                    html += `<div class="result-item ${index === 0 ? '' : 'warning'}">
+                        <h3>Recommended: ${result.gauge} AWG ${material.toUpperCase()}</h3>
+                        <p><strong>Recommended Wire Type:</strong> <span class="result-value">${wireType}</span></p>
+                        <p><strong>Final Allowable Ampacity:</strong> <span class="result-value">${result.finalAllowableAmpacity.toFixed(1)} A</span> (Must be ≥ ${data.designCurrent.toFixed(1)} A)</p>
+                        <p><strong>Adjusted 90°C Ampacity:</strong> ${result.adjustedAmpacity} A</p>
+                        <p><strong>Voltage Drop:</strong> <span class="result-value">${result.voltageDropPercent.toFixed(2)}%</span> (Max: ${data.maxVoltageDrop}%)</p>
+                        <p><strong>Resistance:</strong> ${result.resistance} Ω/1000ft</p>
+                        ${index === 0 ? '<p style="color: #27ae60; font-weight: bold;">This is your optimal choice</p>' : 
+                          '<p style="color: #f39c12; font-weight: bold;">Alternative option</p>'}
+                    </div>`;
+                });
+
+                // Show OCPD recommendation
+                const designCurrent = data.designCurrent;
+                const standardOcpdSizes = [15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200];
+                const recommendedOcpd = standardOcpdSizes.find(size => size >= designCurrent) || 'Custom Size Required';
+                
+                html += `<div class="result-item">
+                    <h3>Overcurrent Protection</h3>
+                    <p><strong>Recommended OCPD:</strong> <span class="result-value">${recommendedOcpd}A</span> breaker/fuse</p>
+                    <p><strong>Basis:</strong> Must be ≥ ${designCurrent.toFixed(1)}A (design current)</p>
+                </div>`;
+
+                // Equipment grounding conductor
+                const necEgcSizes = { 15: '14', 20: '12', 30: '10', 40: '10', 60: '10', 100: '8', 200: '6' };
+                let egcSize = '12'; // default
+                if (typeof recommendedOcpd === 'number') {
+                    for (const ocpdRating of Object.keys(necEgcSizes).map(Number).sort((a,b) => a-b)) {
+                        if (recommendedOcpd <= ocpdRating) {
+                            egcSize = necEgcSizes[ocpdRating];
+                            break;
+                        }
+                    }
+                }
+
+                html += `<div class="result-item">
+                    <h3>Equipment Grounding Conductor</h3>
+                    <p><strong>Required EGC:</strong> <span class="result-value">${egcSize} AWG</span> bare copper</p>
+                    <p><strong>Basis:</strong> NEC Table 250.122 for ${recommendedOcpd}A OCPD</p>
+                </div>`;
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Event listeners
+        document.getElementById('isRooftop').addEventListener('change', function() {
+            document.getElementById('rooftopDistanceGroup').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('conduitType').addEventListener('change', function() {
+            document.getElementById('conductorsInConduitGroup').style.display = 
+                this.value === 'conduit' ? 'block' : 'none';
+        });
+
+        // Initialize event listeners and helper functions
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentHelp();
+            document.getElementById('fromEquipment').addEventListener('change', updateCurrentHelp);
+        });
+    </script>
+</body>
+</html>
