@@ -881,7 +881,8 @@
             const leg = wireLegs[index];
             Object.keys(leg).forEach(key => {
                 if (key === 'microInverter') return; // Global setting, skip
-                const element = document.getElementById(key);
+                const elementId = key === 'id' ? 'legId' : key;
+                const element = document.getElementById(elementId);
                 if (element) {
                     if (element.type === 'checkbox') {
                         element.checked = leg[key];
