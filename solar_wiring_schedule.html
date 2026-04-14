@@ -258,6 +258,55 @@
             color: #555;
             font-size: 0.9rem;
         }
+
+        .system-config {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-bottom: 2px solid #66bb6a;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        .system-config h3 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 1.1rem;
+            white-space: nowrap;
+        }
+        .system-config .config-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .system-config label {
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+        }
+        .system-config select,
+        .system-config input {
+            padding: 6px 10px;
+            border: 2px solid #66bb6a;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: white;
+        }
+        .system-config select:focus,
+        .system-config input:focus {
+            outline: none;
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+        .system-config .config-summary {
+            margin-left: auto;
+            padding: 6px 14px;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #555;
+            border: 1px solid #a5d6a7;
+        }
     </style>
 </head>
 <body>
@@ -265,6 +314,26 @@
         <div class="header">
             <h1>⚡ Solar Wiring Schedule Generator</h1>
             <p>Professional electrical design tool for solar installations</p>
+        </div>
+
+        <div class="system-config">
+            <h3>System Configuration:</h3>
+            <div class="config-field">
+                <label for="globalMicroInverter">Microinverter:</label>
+                <select id="globalMicroInverter">
+                    <option value="">(Manual Current)</option>
+                    <option value="Enphase IQ8+">Enphase IQ8+</option>
+                    <option value="Enphase IQ8M">Enphase IQ8M</option>
+                    <option value="Enphase IQ8A">Enphase IQ8A</option>
+                    <option value="Enphase IQ8H">Enphase IQ8H</option>
+                    <option value="Enphase IQ8HC">Enphase IQ8HC</option>
+                </select>
+            </div>
+            <div class="config-field">
+                <label for="globalMicroCount">Total Qty:</label>
+                <input type="number" id="globalMicroCount" value="1" min="1" style="width: 70px;">
+            </div>
+            <span id="configSummary" class="config-summary"></span>
         </div>
 
         <div class="controls">
@@ -289,8 +358,7 @@
                     <div class="form-group"><label for="ambientTemp">Ambient Temp (°C):</label><input type="number" id="ambientTemp" value="32"></div>
                     <div class="form-group checkbox-group"><label for="rooftopInstallation">Rooftop?</label><input type="checkbox" id="rooftopInstallation" style="width: 20px; height: 20px;"></div>
                     <div class="form-group" id="rooftopDistanceGroup" style="display: none;"><label for="rooftopDistance">Dist. Above Roof:</label><select id="rooftopDistance"><option value="0-1/2">0 - 1/2 in</option><option value="1/2-3.5" selected>> 1/2 to 3.5 in</option><option value="3.5-12">> 3.5 to 12 in</option></select></div>
-                    <div class="form-group"><label for="microInverter">Microinverter:</label><select id="microInverter"><option value="">(Manual Current)</option><option value="Enphase IQ8+">Enphase IQ8+</option><option value="Enphase IQ8M">Enphase IQ8M</option><option value="Enphase IQ8A">Enphase IQ8A</option><option value="Enphase IQ8H">Enphase IQ8H</option><option value="Enphase IQ8HC">Enphase IQ8HC</option></select></div>
-                    <div class="form-group"><label for="panelCount">Number of Panels/Micros:</label><input type="number" id="panelCount" value="1" min="1"></div>
+                    <div class="form-group"><label for="panelCount">Panels/Micros on this Leg:</label><input type="number" id="panelCount" value="1" min="1"></div>
                     <div class="form-group"><label for="contCurrent">Cont. Current (A) (Calc):</label><input type="number" id="contCurrent" step="0.01"></div>
                     <div class="form-group"><label for="length">Length (ft):</label><input type="number" id="length" value="100" min="1"></div>
                     <div class="form-group"><label for="voltage">Voltage (V):</label><select id="voltage"><option value="120">120V</option><option value="240" selected>240V</option></select></div>
@@ -626,11 +694,45 @@
             document.getElementById('egcAwg').value = egcSize;
         }
         
+        function getGlobalMicroInverter() {
+            return document.getElementById('globalMicroInverter').value;
+        }
+
+        function getGlobalMicroCount() {
+            return parseInt(document.getElementById('globalMicroCount').value) || 1;
+        }
+
+        function saveSystemConfig() {
+            localStorage.setItem('solarCalc_microInverter', getGlobalMicroInverter());
+            localStorage.setItem('solarCalc_microCount', getGlobalMicroCount());
+            updateConfigSummary();
+        }
+
+        function loadSystemConfig() {
+            const savedModel = localStorage.getItem('solarCalc_microInverter');
+            const savedCount = localStorage.getItem('solarCalc_microCount');
+            if (savedModel !== null) document.getElementById('globalMicroInverter').value = savedModel;
+            if (savedCount !== null) document.getElementById('globalMicroCount').value = savedCount;
+            updateConfigSummary();
+        }
+
+        function updateConfigSummary() {
+            const model = getGlobalMicroInverter();
+            const count = getGlobalMicroCount();
+            const summary = document.getElementById('configSummary');
+            if (model && microInverterSpecs[model]) {
+                const perUnit = microInverterSpecs[model].maxContinuousOutputCurrent;
+                summary.textContent = `${count}x ${model} | ${perUnit}A each | ${(perUnit * count).toFixed(2)}A total`;
+            } else {
+                summary.textContent = 'Manual current entry mode';
+            }
+        }
+
         function calculateSolarValues() {
-            const microInverterType = document.getElementById('microInverter').value;
+            const microInverterType = getGlobalMicroInverter();
             const panelCount = parseInt(document.getElementById('panelCount').value) || 1;
             const contCurrentInput = document.getElementById('contCurrent');
-            
+
             if (microInverterType && microInverterSpecs[microInverterType]) {
                 const totalCurrent = microInverterSpecs[microInverterType].maxContinuousOutputCurrent * panelCount;
                 contCurrentInput.value = totalCurrent.toFixed(2);
@@ -758,7 +860,7 @@
                 termTempRating: document.getElementById('termTempRating').value,
                 length: parseInt(document.getElementById('length').value),
                 voltage: parseInt(document.getElementById('voltage').value),
-                microInverter: document.getElementById('microInverter').value,
+                microInverter: getGlobalMicroInverter(),
                 panelCount: document.getElementById('panelCount').value,
             };
         }
@@ -790,6 +892,7 @@
         function editLeg(index) {
             const leg = wireLegs[index];
             Object.keys(leg).forEach(key => {
+                if (key === 'microInverter') return; // Global setting, skip
                 const element = document.getElementById(key);
                 if (element) {
                     if (element.type === 'checkbox') {
@@ -893,8 +996,13 @@
             document.getElementById('csvFileInput').addEventListener('change', importFromCsv);
             
             document.getElementById('ocpd').addEventListener('change', updateEgcSize);
-            
-            const solarInputs = ['microInverter', 'panelCount', 'contCurrent'];
+
+            // Global microinverter config - persist on change
+            document.getElementById('globalMicroInverter').addEventListener('change', () => { saveSystemConfig(); calculateSolarValues(); });
+            document.getElementById('globalMicroCount').addEventListener('change', saveSystemConfig);
+            document.getElementById('globalMicroCount').addEventListener('input', saveSystemConfig);
+
+            const solarInputs = ['panelCount', 'contCurrent'];
             solarInputs.forEach(id => document.getElementById(id).addEventListener('change', calculateSolarValues) );
 
             document.getElementById('conductorType').addEventListener('change', handleConductorTypeChange);
@@ -902,6 +1010,7 @@
             document.getElementById('rooftopDistanceGroup').style.display = e.target.checked ? 'flex' : 'none';
             });
             
+            loadSystemConfig();
             updateEgcSize();
             calculateSolarValues();
             renderTable();

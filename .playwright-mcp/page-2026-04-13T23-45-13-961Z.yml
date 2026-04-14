@@ -1,0 +1,171 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - heading "⚡ Solar Wiring Schedule Generator" [level=1] [ref=e4]
+      - paragraph [ref=e5]: Professional electrical design tool for solar installations
+    - generic [ref=e6]:
+      - heading "System Configuration:" [level=3] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9]: "Microinverter:"
+        - combobox "Microinverter:" [ref=e10]:
+          - option "(Manual Current)"
+          - option "Enphase IQ8+" [selected]
+          - option "Enphase IQ8M"
+          - option "Enphase IQ8A"
+          - option "Enphase IQ8H"
+          - option "Enphase IQ8HC"
+      - generic [ref=e11]:
+        - generic [ref=e12]: "Total Qty:"
+        - spinbutton "Total Qty:" [active] [ref=e13]: "1"
+      - generic [ref=e14]: 1x Enphase IQ8+ | 1.21A each | 1.21A total
+    - generic [ref=e15]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: "Leg ID:"
+          - textbox "Leg ID:" [ref=e20]:
+            - /placeholder: e.g., L-001
+        - generic [ref=e21]:
+          - generic [ref=e22]: "Typical (# of Wires):"
+          - spinbutton "Typical (# of Wires):" [ref=e23]: "1"
+        - generic [ref=e24]:
+          - generic [ref=e25]: "Initial Location:"
+          - textbox "Initial Location:" [ref=e26]:
+            - /placeholder: e.g., PV Array
+        - generic [ref=e27]:
+          - generic [ref=e28]: "Final Location:"
+          - textbox "Final Location:" [ref=e29]:
+            - /placeholder: e.g., Junction Box
+        - generic [ref=e30]:
+          - generic [ref=e31]: "Conductor Gauge:"
+          - combobox "Conductor Gauge:" [ref=e32]:
+            - option "14 AWG"
+            - option "12 AWG"
+            - option "10 AWG" [selected]
+            - option "8 AWG"
+            - option "6 AWG"
+            - option "4 AWG"
+            - option "2 AWG"
+            - option "1 AWG"
+            - option "1/0 AWG"
+            - option "2/0 AWG"
+            - option "3/0 AWG"
+            - option "4/0 AWG"
+        - generic [ref=e33]:
+          - generic [ref=e34]: "Conductor Type:"
+          - combobox "Conductor Type:" [ref=e35]:
+            - option "THWN-2" [selected]
+            - option "XHHW-2"
+            - option "Enphase Q Cable"
+        - generic [ref=e36]:
+          - generic [ref=e37]: "Conductor Material:"
+          - combobox "Conductor Material:" [ref=e38]:
+            - option "Copper" [selected]
+            - option "Aluminum"
+        - generic [ref=e39]:
+          - generic [ref=e40]: "Conduit:"
+          - combobox "Conduit:" [ref=e41]:
+            - option "1/2\""
+            - option "3/4\"" [selected]
+            - option "1\""
+            - option "1-1/4\""
+            - option "1-1/2\""
+            - option "2\""
+            - option "N/A"
+        - generic [ref=e42]:
+          - generic [ref=e43]: "# of Parallel Circuits:"
+          - spinbutton "# of Parallel Circuits:" [ref=e44]: "1"
+        - generic [ref=e45]:
+          - generic [ref=e46]: "CCC in Conduit:"
+          - spinbutton "CCC in Conduit:" [ref=e47]: "3"
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - text: "OCPD (A):"
+            - button "Suggest" [ref=e50] [cursor=pointer]
+          - 'spinbutton "OCPD (A): Suggest" [ref=e51]': "20"
+        - generic [ref=e52]:
+          - generic [ref=e53]: "EGC Gauge (Calculated):"
+          - combobox "EGC Gauge (Calculated):" [disabled] [ref=e54]:
+            - option "14 AWG"
+            - option "12 AWG" [selected]
+            - option "10 AWG"
+            - option "8 AWG"
+            - option "6 AWG"
+            - option "4 AWG"
+        - generic [ref=e55]:
+          - generic [ref=e56]: "EGC Material:"
+          - combobox "EGC Material:" [ref=e57]:
+            - option "Bare Copper" [selected]
+            - option "Insulated Copper"
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Terminal Temp Rating (°C):"
+          - combobox "Terminal Temp Rating (°C):" [ref=e60]:
+            - option "60°C"
+            - option "75°C" [selected]
+            - option "90°C"
+        - generic [ref=e61]:
+          - generic [ref=e62]: "Ambient Temp (°C):"
+          - spinbutton "Ambient Temp (°C):" [ref=e63]: "32"
+        - generic [ref=e64]:
+          - generic [ref=e65]: Rooftop?
+          - checkbox "Rooftop?" [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]: "Panels/Micros on this Leg:"
+          - spinbutton "Panels/Micros on this Leg:" [ref=e69]: "1"
+        - generic [ref=e70]:
+          - generic [ref=e71]: "Cont. Current (A) (Calc):"
+          - spinbutton "Cont. Current (A) (Calc):" [ref=e72]: "1.21"
+        - generic [ref=e73]:
+          - generic [ref=e74]: "Length (ft):"
+          - spinbutton "Length (ft):" [ref=e75]: "100"
+        - generic [ref=e76]:
+          - generic [ref=e77]: "Voltage (V):"
+          - combobox "Voltage (V):" [ref=e78]:
+            - option "120V"
+            - option "240V" [selected]
+      - generic [ref=e79]:
+        - button "Add Wiring Leg" [ref=e80] [cursor=pointer]
+        - button "Clear All" [ref=e81] [cursor=pointer]
+        - button "Export to CSV" [ref=e82] [cursor=pointer]
+        - button "Import from CSV" [ref=e83] [cursor=pointer]
+    - heading "🔌 No Wiring Legs Added Yet" [level=3] [ref=e86]
+  - generic [ref=e87]:
+    - heading "Field Definitions" [level=2] [ref=e88]
+    - generic [ref=e89]:
+      - term [ref=e90]: ID
+      - definition [ref=e91]: A unique identifier for the wiring leg (e.g., L-001).
+      - term [ref=e92]: Typical
+      - definition [ref=e93]: The number of identical, parallel wires in a single run (e.g., 4 for the 4 strings combined in a home run).
+      - term [ref=e94]: Initial/Final Location
+      - definition [ref=e95]: The start and end points of the wire run (e.g., PV Array to Junction Box).
+      - term [ref=e96]: Conductor (Gauge/Type/Material)
+      - definition [ref=e97]: The properties of the main current-carrying wires. Gauge is the size (AWG), Type is the insulation (e.g., THWN-2), and Material is Copper or Aluminum.
+      - term [ref=e98]: Conduit
+      - definition [ref=e99]: The nominal trade size of the conduit containing the wires (e.g., 3/4").
+      - term [ref=e100]: "# of Parallel Circuits"
+      - definition [ref=e101]: The number of separate circuits being run together.
+      - term [ref=e102]: CCC (Current Carrying Conductors)
+      - definition [ref=e103]: The total number of conductors in the conduit that generate heat (hots and neutrals). Used to calculate the Conduit Fill Factor.
+      - term [ref=e104]: Fill %
+      - definition [ref=e105]: The calculated percentage of the conduit's usable area that is filled by all wires, including the ground wire.
+      - term [ref=e106]: OCPD (Overcurrent Protection Device)
+      - definition [ref=e107]: The amperage rating of the circuit breaker or fuse protecting the circuit.
+      - term [ref=e108]: EGC (Equipment Grounding Conductor)
+      - definition [ref=e109]: The safety ground wire. Its size (Gauge) is determined by the OCPD rating, and its material is typically bare or insulated copper.
+      - term [ref=e110]: Temp. Corr. (°C / Factor)
+      - definition [ref=e111]: A derating factor applied to wire ampacity based on the ambient temperature where it is installed. The factor is calculated from the temperature based on NEC tables.
+      - term [ref=e112]: Conduit Fill Factor
+      - definition [ref=e113]: A derating factor applied when more than 3 CCCs are bundled in a conduit, accounting for heat buildup. It is calculated from the CCC value.
+      - term [ref=e114]: Cont. Current (Continuous Current)
+      - definition [ref=e115]: The expected, steady-state current the circuit will carry during normal operation.
+      - term [ref=e116]: Max Current
+      - definition [ref=e117]: For solar circuits, this is the value used to size wires and breakers, calculated as Continuous Current x 1.25 per NEC requirements.
+      - term [ref=e118]: Base Amp
+      - definition [ref=e119]: The maximum ampacity of the conductor in ideal conditions, based on its size and temperature rating, before any derating factors are applied.
+      - term [ref=e120]: Derated Amp
+      - definition [ref=e121]: The final, true ampacity of the conductor after applying all correction factors (temperature and conduit fill). This value must be greater than the Max Current.
+      - term [ref=e122]: Term Temp (Terminal Temperature Rating)
+      - definition [ref=e123]: The maximum temperature rating of the terminals the wire is connected to (usually 75°C for standard breakers).
+      - term [ref=e124]: Length
+      - definition [ref=e125]: The one-way length of the wire run in feet.
+      - term [ref=e126]: VD % (Voltage Drop)
+      - definition [ref=e127]: The percentage of voltage lost over the length of the wire due to resistance. Should typically be kept below 3%.
