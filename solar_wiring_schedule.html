@@ -329,10 +329,6 @@
                     <option value="Enphase IQ8HC">Enphase IQ8HC</option>
                 </select>
             </div>
-            <div class="config-field">
-                <label for="globalMicroCount">Total Qty:</label>
-                <input type="number" id="globalMicroCount" value="1" min="1" style="width: 70px;">
-            </div>
             <span id="configSummary" class="config-summary"></span>
         </div>
 
@@ -698,31 +694,23 @@
             return document.getElementById('globalMicroInverter').value;
         }
 
-        function getGlobalMicroCount() {
-            return parseInt(document.getElementById('globalMicroCount').value) || 1;
-        }
-
         function saveSystemConfig() {
             localStorage.setItem('solarCalc_microInverter', getGlobalMicroInverter());
-            localStorage.setItem('solarCalc_microCount', getGlobalMicroCount());
             updateConfigSummary();
         }
 
         function loadSystemConfig() {
             const savedModel = localStorage.getItem('solarCalc_microInverter');
-            const savedCount = localStorage.getItem('solarCalc_microCount');
             if (savedModel !== null) document.getElementById('globalMicroInverter').value = savedModel;
-            if (savedCount !== null) document.getElementById('globalMicroCount').value = savedCount;
             updateConfigSummary();
         }
 
         function updateConfigSummary() {
             const model = getGlobalMicroInverter();
-            const count = getGlobalMicroCount();
             const summary = document.getElementById('configSummary');
             if (model && microInverterSpecs[model]) {
                 const perUnit = microInverterSpecs[model].maxContinuousOutputCurrent;
-                summary.textContent = `${count}x ${model} | ${perUnit}A each | ${(perUnit * count).toFixed(2)}A total`;
+                summary.textContent = `${model} — ${perUnit}A per unit`;
             } else {
                 summary.textContent = 'Manual current entry mode';
             }
@@ -999,8 +987,6 @@
 
             // Global microinverter config - persist on change
             document.getElementById('globalMicroInverter').addEventListener('change', () => { saveSystemConfig(); calculateSolarValues(); });
-            document.getElementById('globalMicroCount').addEventListener('change', saveSystemConfig);
-            document.getElementById('globalMicroCount').addEventListener('input', saveSystemConfig);
 
             const solarInputs = ['panelCount', 'contCurrent'];
             solarInputs.forEach(id => document.getElementById(id).addEventListener('change', calculateSolarValues) );
