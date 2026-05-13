@@ -307,6 +307,118 @@
             color: #555;
             border: 1px solid #a5d6a7;
         }
+
+        .btn-check {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            margin-left: 10px;
+        }
+        .btn-check:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .report-container {
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1800px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .report-container h2 {
+            text-align: center;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .report-timestamp {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+        .report-summary {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .report-badge {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .report-badge.errors {
+            background: rgba(220, 53, 69, 0.15);
+            color: #c0392b;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        .report-badge.warnings {
+            background: rgba(255, 193, 7, 0.2);
+            color: #856404;
+            border: 1px solid rgba(255, 193, 7, 0.4);
+        }
+        .report-badge.info {
+            background: rgba(52, 152, 219, 0.1);
+            color: #2471a3;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        .report-badge.pass {
+            background: rgba(39, 174, 96, 0.15);
+            color: #1e8449;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+        .report-section {
+            margin-bottom: 20px;
+        }
+        .report-section h3 {
+            font-size: 1rem;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .report-section h3.section-errors {
+            background: rgba(220, 53, 69, 0.1);
+            color: #c0392b;
+        }
+        .report-section h3.section-warnings {
+            background: rgba(255, 193, 7, 0.15);
+            color: #856404;
+        }
+        .report-section h3.section-info {
+            background: rgba(52, 152, 219, 0.08);
+            color: #2471a3;
+        }
+        .report-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+        .report-item:last-child { border-bottom: none; }
+        .report-item .leg-ref {
+            font-weight: 700;
+            white-space: nowrap;
+            min-width: 55px;
+            color: #555;
+        }
+        .report-item .finding {
+            color: #333;
+        }
+        .report-pass-message {
+            text-align: center;
+            padding: 30px;
+            color: #1e8449;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -366,6 +478,7 @@
                 <button id="clearAllButton" class="btn btn-secondary">Clear All</button>
                 <button id="exportCsvButton" class="btn btn-secondary">Export to CSV</button>
                 <button id="importCsvButton" class="btn btn-secondary">Import from CSV</button> <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <button id="checkConfigButton" class="btn btn-check">Check Configuration</button>
             </div>
         </div>
 
@@ -412,6 +525,8 @@
             </table>
         </div>
     </div>
+
+    <div id="reportContainer" class="report-container" style="display: none;"></div>
 
     <div class="definitions-container">
         <h2>Field Definitions</h2>
@@ -967,12 +1082,245 @@
             document.getElementById('rooftopDistanceGroup').style.display = 'none';
         }
         
+        function checkConfiguration() {
+            if (wireLegs.length === 0) {
+                alert('No wiring legs to check. Add at least one leg first.');
+                return;
+            }
+
+            // Recalculate all legs
+            wireLegs.forEach(leg => { leg.calculations = calculateValues(leg); });
+            renderTable();
+
+            const errors = [];
+            const warnings = [];
+            const info = [];
+            const ids = [];
+
+            wireLegs.forEach((leg, index) => {
+                const calc = leg.calculations;
+                const ref = leg.id || `Leg ${index + 1}`;
+                const isQCable = isEnphaseQCable(leg.conductorType);
+
+                // --- ERRORS (failures that violate NEC or make the design unsafe) ---
+
+                // Ampacity check: derated ampacity must be >= max current
+                const finalAmp = parseFloat(calc.finalAllowableAmpacity);
+                const maxCur = parseFloat(calc.maxCurrent);
+                if (finalAmp < maxCur) {
+                    errors.push({ ref, msg: `Derated ampacity (${calc.finalAllowableAmpacity}A) is less than required max current (${calc.maxCurrent}A). Wire is undersized.` });
+                }
+
+                // Voltage drop > 3%
+                const vd = parseFloat(calc.voltageDrop);
+                if (vd > 3) {
+                    errors.push({ ref, msg: `Voltage drop is ${calc.voltageDrop}% — exceeds the 3% recommended maximum. Consider larger wire gauge or shorter run.` });
+                }
+
+                // Conduit fill exceeded
+                if (!isQCable && calc.fillPercent !== 'N/A') {
+                    const fillPct = parseFloat(calc.fillPercent);
+                    const allowFill = parseFloat(calc.allowableFillPercentage);
+                    if (fillPct > allowFill) {
+                        errors.push({ ref, msg: `Conduit fill is ${calc.fillPercent}% — exceeds allowable ${calc.allowableFillPercentage}%. Use larger conduit or reduce conductors.` });
+                    }
+                }
+
+                // Zero or missing continuous current
+                if (!leg.contCurrent || leg.contCurrent <= 0) {
+                    errors.push({ ref, msg: `Continuous current is 0 or not set. Cannot properly size protection or verify ampacity.` });
+                }
+
+                // OCPD too small for max current (non-Q-Cable)
+                if (!isQCable) {
+                    const ocpd = parseInt(leg.ocpd) || 0;
+                    if (leg.microInverter && ocpd < maxCur) {
+                        errors.push({ ref, msg: `OCPD (${ocpd}A) is less than the required max current (${calc.maxCurrent}A). Breaker is undersized.` });
+                    }
+                }
+
+                // Aluminum wire < 6 AWG (not commonly used, potential code issue)
+                if (leg.conductorMaterial === 'Aluminum') {
+                    const aluminumMinGauges = ['14', '12', '10', '8'];
+                    if (aluminumMinGauges.includes(leg.conductorAwg)) {
+                        errors.push({ ref, msg: `Aluminum conductor in ${leg.conductorAwg} AWG — aluminum is generally not available or permitted in sizes smaller than 6 AWG per NEC.` });
+                    }
+                }
+
+                // --- WARNINGS (concerning but not necessarily code violations) ---
+
+                // Voltage drop between 2% and 3%
+                if (vd > 2 && vd <= 3) {
+                    warnings.push({ ref, msg: `Voltage drop is ${calc.voltageDrop}% — approaching the 3% limit. Consider upsizing wire for better performance.` });
+                }
+
+                // Very high effective ambient temperature
+                if (calc.effectiveAmbientTemp > 50) {
+                    warnings.push({ ref, msg: `Effective ambient temperature is ${calc.effectiveAmbientTemp}°C — severe derating applied. Verify installation environment.` });
+                }
+
+                // Conduit fill approaching limit (>80% of allowable)
+                if (!isQCable && calc.fillPercent !== 'N/A') {
+                    const fillPct = parseFloat(calc.fillPercent);
+                    const allowFill = parseFloat(calc.allowableFillPercentage);
+                    if (fillPct > allowFill * 0.8 && fillPct <= allowFill) {
+                        warnings.push({ ref, msg: `Conduit fill is ${calc.fillPercent}% — approaching the ${calc.allowableFillPercentage}% limit. Consider next size conduit.` });
+                    }
+                }
+
+                // Missing location info
+                if (!leg.initialLocation.trim() || !leg.finalLocation.trim()) {
+                    warnings.push({ ref, msg: `Missing initial or final location. Complete location info for a proper wiring schedule.` });
+                }
+
+                // Q-Cable without microinverter selected
+                if (isQCable && !leg.microInverter) {
+                    warnings.push({ ref, msg: `Enphase Q-Cable is selected but no microinverter model is configured. Verify this is intentional.` });
+                }
+
+                // Non-Q-Cable with conduit set to N/A
+                if (!isQCable && leg.conduitDiameter === 'NA') {
+                    warnings.push({ ref, msg: `Conduit is set to N/A but conductor type is not Enphase Q-Cable. Conduit fill cannot be calculated.` });
+                }
+
+                // Rooftop installation without rooftop checkbox
+                // (Check if ambient temp seems high but rooftop not checked — informational)
+                if (!leg.isRooftop && parseInt(leg.ambientTemp) > 40) {
+                    warnings.push({ ref, msg: `Ambient temperature is ${leg.ambientTemp}°C without rooftop adder. If on a rooftop, enable the rooftop checkbox for accurate derating.` });
+                }
+
+                // Microinverter set but panel count seems off
+                if (leg.microInverter && parseInt(leg.panelCount) <= 0) {
+                    warnings.push({ ref, msg: `Microinverter is selected but panel count is 0 or not set.` });
+                }
+
+                // Terminal temp rating mismatch advisory
+                if (!isQCable && leg.termTempRating === '90') {
+                    warnings.push({ ref, msg: `Terminal temperature rating is 90°C. Most standard breakers and terminals are rated 75°C — verify equipment supports 90°C termination.` });
+                }
+
+                // --- INFO (observations and best-practice notes) ---
+
+                // Very long wire run
+                if (leg.length > 200) {
+                    info.push({ ref, msg: `Wire run is ${leg.length}ft — long runs increase voltage drop. Verify voltage drop is acceptable.` });
+                }
+
+                // Multiple parallel circuits
+                if (parseInt(leg.parallelCircuits) > 1) {
+                    info.push({ ref, msg: `${leg.parallelCircuits} parallel circuits specified. Ensure CCC count reflects all conductors in the conduit.` });
+                }
+
+                // High CCC count
+                const ccc = parseInt(leg.currentCarryingConductors);
+                if (ccc > 6) {
+                    info.push({ ref, msg: `${ccc} current-carrying conductors in conduit — significant bundling derating (factor: ${ccc <= 9 ? '0.70' : ccc <= 20 ? '0.50' : '0.45'}) is applied.` });
+                }
+
+                // Track IDs for duplicate check
+                ids.push({ ref, id: leg.id });
+            });
+
+            // Cross-leg checks: duplicate IDs
+            const idCounts = {};
+            ids.forEach(({ ref, id }) => {
+                if (!idCounts[id]) idCounts[id] = [];
+                idCounts[id].push(ref);
+            });
+            Object.entries(idCounts).forEach(([id, refs]) => {
+                if (refs.length > 1) {
+                    warnings.push({ ref: 'Global', msg: `Duplicate Leg ID "${id}" found on ${refs.length} legs. Each leg should have a unique ID.` });
+                }
+            });
+
+            // Cross-leg check: mixed voltages
+            const voltages = [...new Set(wireLegs.map(l => l.voltage))];
+            if (voltages.length > 1) {
+                info.push({ ref: 'Global', msg: `Mixed voltages detected (${voltages.join('V, ')}V). Verify this is intentional for the system design.` });
+            }
+
+            // Cross-leg check: mixed conductor materials
+            const materials = [...new Set(wireLegs.filter(l => !isEnphaseQCable(l.conductorType)).map(l => l.conductorMaterial))];
+            if (materials.length > 1) {
+                info.push({ ref: 'Global', msg: `Mixed conductor materials (${materials.join(', ')}) detected. Verify compatibility and proper terminations.` });
+            }
+
+            // Cross-leg check: microinverter set globally but some legs have no current
+            const globalMicro = getGlobalMicroInverter();
+            if (globalMicro) {
+                const legsWithNoCurrent = wireLegs.filter(l => l.contCurrent <= 0);
+                if (legsWithNoCurrent.length > 0) {
+                    warnings.push({ ref: 'Global', msg: `Microinverter "${globalMicro}" is configured but ${legsWithNoCurrent.length} leg(s) have zero continuous current.` });
+                }
+            }
+
+            // Render the report
+            renderReport(errors, warnings, info);
+        }
+
+        function renderReport(errors, warnings, info) {
+            const container = document.getElementById('reportContainer');
+            const totalFindings = errors.length + warnings.length + info.length;
+            const now = new Date();
+            const timestamp = now.toLocaleString();
+
+            let html = `<h2>Configuration Check Report</h2>`;
+            html += `<p class="report-timestamp">Generated: ${timestamp}</p>`;
+
+            // Summary badges
+            html += `<div class="report-summary">`;
+            if (errors.length > 0) {
+                html += `<div class="report-badge errors">Errors: ${errors.length}</div>`;
+            }
+            if (warnings.length > 0) {
+                html += `<div class="report-badge warnings">Warnings: ${warnings.length}</div>`;
+            }
+            if (info.length > 0) {
+                html += `<div class="report-badge info">Info: ${info.length}</div>`;
+            }
+            if (totalFindings === 0) {
+                html += `<div class="report-badge pass">All Checks Passed</div>`;
+            }
+            html += `</div>`;
+
+            if (totalFindings === 0) {
+                html += `<div class="report-pass-message">All ${wireLegs.length} wiring leg(s) passed configuration checks. No issues found.</div>`;
+            } else {
+                if (errors.length > 0) {
+                    html += `<div class="report-section"><h3 class="section-errors">Errors (${errors.length})</h3>`;
+                    errors.forEach(e => {
+                        html += `<div class="report-item"><span class="leg-ref">${e.ref}</span><span class="finding">${e.msg}</span></div>`;
+                    });
+                    html += `</div>`;
+                }
+                if (warnings.length > 0) {
+                    html += `<div class="report-section"><h3 class="section-warnings">Warnings (${warnings.length})</h3>`;
+                    warnings.forEach(w => {
+                        html += `<div class="report-item"><span class="leg-ref">${w.ref}</span><span class="finding">${w.msg}</span></div>`;
+                    });
+                    html += `</div>`;
+                }
+                if (info.length > 0) {
+                    html += `<div class="report-section"><h3 class="section-info">Info (${info.length})</h3>`;
+                    info.forEach(i => {
+                        html += `<div class="report-item"><span class="leg-ref">${i.ref}</span><span class="finding">${i.msg}</span></div>`;
+                    });
+                    html += `</div>`;
+                }
+            }
+
+            container.innerHTML = html;
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         function clearAll() {
             if (confirm('Are you sure you want to clear all wiring legs?')) {
                 wireLegs = [];
                 legCounter = 1;
                 renderTable();
                 clearForm();
+                document.getElementById('reportContainer').style.display = 'none';
             }
         }
         
@@ -983,6 +1331,7 @@
             document.getElementById('suggestOcpdBtn').addEventListener('click', suggestOcpd);
             document.getElementById('importCsvButton').addEventListener('click', () => document.getElementById('csvFileInput').click());
             document.getElementById('csvFileInput').addEventListener('change', importFromCsv);
+            document.getElementById('checkConfigButton').addEventListener('click', checkConfiguration);
             
             document.getElementById('ocpd').addEventListener('change', updateEgcSize);
 
